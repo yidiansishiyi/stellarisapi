@@ -31,6 +31,13 @@ public class Wmsensitive implements Serializable {
      */
     private Date createdTime;
 
+    public Wmsensitive() {
+    }
+
+    public Wmsensitive(String sensitives) {
+        this.sensitives = sensitives;
+    }
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

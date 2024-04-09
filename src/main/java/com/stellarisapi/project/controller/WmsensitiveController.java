@@ -1,36 +1,33 @@
 package com.stellarisapi.project.controller;
 
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
 import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellarisapi.project.annotation.AuthCheck;
 import com.stellarisapi.project.common.*;
-import com.stellarisapi.project.constant.CommonConstant;
 import com.stellarisapi.project.exception.BusinessException;
 import com.stellarisapi.project.model.dto.WsensitiveQuery;
-import com.stellarisapi.project.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
-import com.stellarisapi.project.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
-import com.stellarisapi.project.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
 import com.stellarisapi.project.model.entity.Wmsensitive;
-import com.stellarisapi.project.model.enums.InterfaceInfoStatusEnum;
-import com.stellarisapi.project.service.InterfaceInfoService;
 import com.stellarisapi.project.service.UserService;
 import com.stellarisapi.project.service.WmsensitiveService;
+import com.stellarisapi.project.utils.SensitiveWordUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 接口管理
- *
-
  */
 @RestController
 @RequestMapping("/wmsensitiveInfo")
@@ -43,8 +40,17 @@ public class WmsensitiveController {
     @Resource
     private UserService userService;
 
-//    @Resource
-//    private stellarisapiClient stellarisapiClient;
+    @PostConstruct
+    void initWmsensitive() {
+        List<Wmsensitive> wmSensitives = wmsensitiveService.list(Wrappers.<Wmsensitive>lambdaQuery()
+                .select(Wmsensitive::getSensitives)
+                .isNotNull(Wmsensitive::getSensitives)
+                .groupBy(Wmsensitive::getSensitives));
+        List<String> sensitiveList = wmSensitives.stream().map(Wmsensitive::getSensitives).collect(Collectors.toList());
+
+        // 初始化敏感词库
+        SensitiveWordUtil.initMap(sensitiveList);
+    }
 
     // region 增删改查
 
@@ -57,7 +63,7 @@ public class WmsensitiveController {
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = "admin")
-    public BaseResponse<Long> addInterfaceInfo(String wmsensitive,HttpServletRequest request) {
+    public BaseResponse<Long> addInterfaceInfo(String wmsensitive, HttpServletRequest request) {
         if (StrUtil.isBlank(wmsensitive)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
@@ -95,20 +101,24 @@ public class WmsensitiveController {
     /**
      * 获取列表（仅管理员可使用）
      *
-     * @param interfaceInfoQueryRequest
+     * @param wsensitiveQuery
      * @return
      */
+    @AuthCheck(mustRole = "admin")
+    @GetMapping("/list")
+    public BaseResponse<Page<Wmsensitive>> listInterfaceInfo(WsensitiveQuery wsensitiveQuery) {
+        LambdaQueryWrapper<Wmsensitive> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(StringUtils.isNotBlank(wsensitiveQuery.getKeyword()),
+                Wmsensitive::getSensitives, wsensitiveQuery.getKeyword());
+        Page<Wmsensitive> wsensitiveList = wmsensitiveService.page(new Page<>(wsensitiveQuery.getPageSize(), wsensitiveQuery.getPageSize()), queryWrapper);
+        return ResultUtils.success(wsensitiveList);
+    }
+
 //    @AuthCheck(mustRole = "admin")
-//    @GetMapping("/list")
-//    public BaseResponse<List<InterfaceInfo>> listInterfaceInfo(WsensitiveQuery wsensitiveQuery) {
-//        Wmsensitive wmsensitive = new Wmsensitive();
-////        if (wsensitiveQuery != null) {
-////            wmsensitive.setSensitives();
-////        }
-//        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-//        List<InterfaceInfo> interfaceInfoList = interfaceInfoService.list(queryWrapper);
-//        return ResultUtils.success(interfaceInfoList);
-//    }
+    @GetMapping("/map")
+    public BaseResponse<Map<String, Object>> listInterfaceInfo() {
+        return ResultUtils.success(SensitiveWordUtil.getDictionaryMap());
+    }
 
 
 }

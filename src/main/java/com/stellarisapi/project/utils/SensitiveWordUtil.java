@@ -1,19 +1,21 @@
 package com.stellarisapi.project.utils;
 
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.stellarisapi.project.model.entity.Wmsensitive;
+import org.springframework.web.bind.annotation.PostMapping;
+
+import javax.annotation.PostConstruct;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class SensitiveWordUtil {
 
-    public static volatile Map<String, Object> dictionaryMap = new HashMap<>();
+    private static volatile Map<String, Object> dictionaryMap = new HashMap<>();
 
     public static Map<String, Object> getDictionaryMap() {
         return dictionaryMap;
     }
-
     /**
      * 生成关键词字典库
      *

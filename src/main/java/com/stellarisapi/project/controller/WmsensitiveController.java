@@ -2,10 +2,8 @@ package com.stellarisapi.project.controller;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
 import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellarisapi.project.annotation.AuthCheck;
 import com.stellarisapi.project.common.*;
@@ -114,7 +112,7 @@ public class WmsensitiveController {
         return ResultUtils.success(wsensitiveList);
     }
 
-//    @AuthCheck(mustRole = "admin")
+    @AuthCheck(mustRole = "admin")
     @GetMapping("/map")
     public BaseResponse<Map<String, Object>> listInterfaceInfo() {
         return ResultUtils.success(SensitiveWordUtil.getDictionaryMap());

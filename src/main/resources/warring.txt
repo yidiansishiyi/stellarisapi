@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>欠费通知</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-image: url('background-image-url.jpg'); /* 替换为实际图片的 URL */
+            background-size: cover;
+            background-position: center;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.8); /* 透明度设置 */
+            border-radius: 10px;
+        }
+        .header {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .content {
+            color: #666;
+            margin-top: 20px;
+            line-height: 1.6;
+        }
+        .highlight {
+            color: #ff6600;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ff6600;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #999;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>尊敬的用户 <span class="highlight">[用户姓名]</span>，您好！</h2>
+        </div>
+        <div class="content">
+            <p>    您在 stellaris 开放平台订阅的 <span class="highlight">[接口名称]</span> 调用量已不足。如需继续使用,请联系管理员以免影响您的正常使用。</p>
+            <p>我们非常感谢您一直以来对我们的支持与信任。</p>
+            <p>如有任何疑问或需要帮助，请随时联系我们的管理员。</p>
+                                                    <p>一点四十一</p>
+            <p>祝您一切顺利！</p>
+        </div>
+        <div class="footer">
+            <p>此邮件为系统自动发送，请勿回复。</p>
+        </div>
+    </div>
+</body>
+</html>

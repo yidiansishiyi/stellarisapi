@@ -26,6 +26,17 @@ spring:
     timeout: 86400
     store-type: redis
   # redis 配置
+  mail:
+    host: smtp.163.com
+    port: 465
+    username: nuomibaicha@163.com
+    password: DLOQPPCAKVGJAVXQ
+    protocol: smtps
+    properties:
+      mail:
+        smtp:
+          ssl:
+            enable: true
 server:
   port: 7529
   servlet:

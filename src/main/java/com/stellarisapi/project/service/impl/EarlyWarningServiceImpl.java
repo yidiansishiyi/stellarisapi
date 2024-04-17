@@ -1,12 +1,15 @@
 package com.stellarisapi.project.service.impl;
 
 import cn.hutool.core.io.resource.ResourceUtil;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.stellaris.stellarisapicommon.common.ErrorCode;
 import com.stellaris.stellarisapicommon.exception.BusinessException;
+import com.stellaris.stellarisapicommon.model.entity.UserInterfaceInfo;
 import com.stellarisapi.project.mapper.EarlyWarningMapper;
 import com.stellarisapi.project.model.entity.EarlyWarning;
 import com.stellarisapi.project.service.EarlyWarningService;
+import com.stellarisapi.project.service.UserInterfaceInfoService;
 import com.stellarisapi.project.utils.MailUtils;
 import com.stellarisapi.project.utils.SensitiveWordUtil;
 import org.springframework.stereotype.Service;
@@ -47,13 +50,16 @@ public class EarlyWarningServiceImpl extends ServiceImpl<EarlyWarningMapper, Ear
     @Resource
     private MailUtils mailUtils;
 
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
+
 //    uii.userId,u.userName,u.userMailbox,ii.name
 
     @Override
     public void sendWarningMessage() {
         List<Map<String, Object>> warningInformation = earlyWarningMapper.getWarningInformation();
         for (Map<String, Object> stringStringMap : warningInformation) {
-            String userName = stringStringMap.get("userName").toString().toString();
+            String userName = stringStringMap.get("userName").toString();
             String userMailbox = stringStringMap.get("userMailbox").toString();
             String name = stringStringMap.get("name").toString();
             String userId = stringStringMap.get("userId").toString();
@@ -64,7 +70,14 @@ public class EarlyWarningServiceImpl extends ServiceImpl<EarlyWarningMapper, Ear
             earlyWarning.setUserId(userId);
             earlyWarning.setUserMailbox(userMailbox);
             earlyWarning.setWarningText(warningHtml);
+            earlyWarning.setCreateUserId("0");
             earlyWarning.setSendingStatus("0");
+            earlyWarningMapper.insert(earlyWarning);
+            UpdateWrapper<UserInterfaceInfo> userInterfaceInfoUpdateWrapper = new UpdateWrapper<>();
+            UpdateWrapper<UserInterfaceInfo> qw = userInterfaceInfoUpdateWrapper.eq("userId", userId)
+                    .eq("interfaceInfoId", stringStringMap.get("interfaceInfoId"));
+            qw.set("status",1);
+            userInterfaceInfoService.update(qw);
         }
     }
 

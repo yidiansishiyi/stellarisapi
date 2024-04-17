@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.stellarisapi.project.mapper.EarlyWarningMapper">
+
+    <sql id="Base_Column_List">
+        id,userId,userMailbox,
+        warningText,sendingStatus,createTime,
+        updateTime,isDelete
+    </sql>
+    <select id="getWarningInformation" resultType="java.util.Map">
+        SELECT
+              uii.userId
+             ,uii.interfaceInfoId
+             ,u.userName
+             ,u.userMailbox
+             ,ii.name
+        FROM `user_interface_info` uii
+            LEFT JOIN user u
+            ON uii.userId = u.id
+            LEFT JOIN interface_info ii
+            ON uii.interfaceInfoId = ii.id
+        WHERE
+            leftNum = 0 AND uii.status = 0
+        AND u.userMailbox IS NOT NULL;
+    </select>
+</mapper>

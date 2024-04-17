@@ -1,5 +1,6 @@
 package com.stellarisapi.project.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.stellaris.stellarisapicommon.common.BaseResponse;
@@ -9,12 +10,14 @@ import com.stellaris.stellarisapicommon.common.ResultUtils;
 import com.stellaris.stellarisapicommon.constant.CommonConstant;
 import com.stellaris.stellarisapicommon.exception.BusinessException;
 import com.stellaris.stellarisapicommon.model.entity.User;
+import com.stellaris.stellarisapicommon.model.entity.UserInterfaceInfo;
 import com.stellarisapi.project.annotation.AuthCheck;
 
 import com.stellarisapi.project.model.dto.earlyWarning.EarlyWarningAddRequest;
 import com.stellarisapi.project.model.dto.earlyWarning.EarlyWarningQueryRequest;
 import com.stellarisapi.project.model.entity.EarlyWarning;
 import com.stellarisapi.project.service.EarlyWarningService;
+import com.stellarisapi.project.service.UserInterfaceInfoService;
 import com.stellarisapi.project.service.UserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -32,6 +35,9 @@ public class EarlyWarningController {
 
     @Resource
     private UserService userService;
+
+    @Resource
+    private UserInterfaceInfoService userInterfaceInfoService;
 
     /**
      * 创建
@@ -151,5 +157,30 @@ public class EarlyWarningController {
         return ResultUtils.success(earlyWarningPage);
     }
 
+    /**
+     * 分页获取列表
+     *
+     * @param earlyWarningQueryRequest
+     * @param request
+     * @return
+     */
+    @AuthCheck(mustRole = "admin")
+    @GetMapping("/list/send/page")
+    public BaseResponse<Page<UserInterfaceInfo>> listEarlyWarningSendByPage(EarlyWarningQueryRequest earlyWarningQueryRequest, HttpServletRequest request) {
+        if (earlyWarningQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        long current = earlyWarningQueryRequest.getCurrent();
+        long size = earlyWarningQueryRequest.getPageSize();
+
+        // 限制爬虫
+        if (size > 50) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        LambdaQueryWrapper<UserInterfaceInfo> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.le(UserInterfaceInfo::getLeftNum,50);
+        Page<UserInterfaceInfo> earlyWarningPage = userInterfaceInfoService.page(new Page<>(current, size), queryWrapper);
+        return ResultUtils.success(earlyWarningPage);
+    }
 
 }

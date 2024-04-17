@@ -30,7 +30,7 @@ public class EarlyWarningServiceImpl extends ServiceImpl<EarlyWarningMapper, Ear
 
     @PostConstruct
     void initialize() {
-        String warring = ResourceUtil.readUtf8Str("warring.txt");
+        String warring = ResourceUtil.readUtf8Str("warring.html");
         this.setStrHtmlWarning(warring);
     }
 

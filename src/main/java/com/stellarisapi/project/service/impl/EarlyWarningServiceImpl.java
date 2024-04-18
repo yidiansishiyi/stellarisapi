@@ -70,7 +70,7 @@ public class EarlyWarningServiceImpl extends ServiceImpl<EarlyWarningMapper, Ear
             earlyWarning.setUserId(userId);
             earlyWarning.setUserMailbox(userMailbox);
             earlyWarning.setWarningText(warningHtml);
-            earlyWarning.setCreateUserId("0");
+            earlyWarning.setCreateUserId(0l);
             earlyWarning.setSendingStatus("0");
             earlyWarningMapper.insert(earlyWarning);
             UpdateWrapper<UserInterfaceInfo> userInterfaceInfoUpdateWrapper = new UpdateWrapper<>();

@@ -56,7 +56,7 @@ public class EarlyWarningController {
         // 校验
         earlyWarningService.validEarlyWarning(earlyWarning, true);
         User loginUser = userService.getLoginUser(request);
-        earlyWarning.setCreateUserId(loginUser.getId().toString());
+        earlyWarning.setCreateUserId(loginUser.getId());
         boolean result = earlyWarningService.save(earlyWarning);
         if (!result) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);

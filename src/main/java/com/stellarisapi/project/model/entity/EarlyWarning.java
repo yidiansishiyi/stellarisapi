@@ -30,7 +30,7 @@ public class EarlyWarning implements Serializable {
     /**
      * 创建用户 ID
      */
-    private String createUserId;
+    private Long createUserId;
 
     /**
      * 用户邮箱

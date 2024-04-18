@@ -14,4 +14,7 @@ public interface InnerUserInterfaceInfoService {
      * @return
      */
     boolean invokeCount(long interfaceInfoId, long userId);
+
+    boolean thereIsALimit(long userId);
+
 }

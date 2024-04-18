@@ -5,6 +5,7 @@ import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellaris.stellarisapicommon.service.InnerInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserService;
+import com.stellarisapi.manager.RedisManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
@@ -24,6 +25,7 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,8 +33,6 @@ import java.util.List;
 
 /**
  * 全局过滤
- *
- 
  */
 @Slf4j
 @Component
@@ -46,6 +46,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     @DubboReference
     private InnerUserInterfaceInfoService innerUserInterfaceInfoService;
+
+    @Resource
+    private RedisManager redisManager;
 
     private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1");
 
@@ -65,11 +68,11 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求来源地址：" + sourceAddress);
         log.info("请求来源地址：" + request.getRemoteAddress());
         ServerHttpResponse response = exchange.getResponse();
-        // 2. 访问控制 - 黑白名单
-        if (!IP_WHITE_LIST.contains(sourceAddress)) {
-            response.setStatusCode(HttpStatus.FORBIDDEN);
-            return response.setComplete();
-        }
+        // 2. 访问控制 - 黑白名单(后期可以做一个表记录每一个接口的白名单)
+//        if (!IP_WHITE_LIST.contains(sourceAddress)) {
+//            response.setStatusCode(HttpStatus.FORBIDDEN);
+//            return response.setComplete();
+//        }
         // 3. 用户鉴权（判断 ak、sk 是否合法）
         HttpHeaders headers = request.getHeaders();
         String accessKey = headers.getFirst("accessKey");
@@ -77,6 +80,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
         String body = headers.getFirst("body");
+
         // todo 实际情况应该是去数据库中查是否已分配给用户
         User invokeUser = null;
         try {
@@ -99,10 +103,15 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
             return handleNoAuth(response);
         }
+        // 确保一个来源的随机数五分钟内唯一(长度暂定为一个mysql text 的长度)
+        if (!redisManager.storeRandomNumber(sourceAddress, nonce, 65535)) {
+            return handleNoAuth(response);
+        }
         // 实际情况中是从数据库中查出 secretKey
         String secretKey = invokeUser.getSecretKey();
         String serverSign = com.stellarisapi.stellarisapiclientsdk.utils.SignUtils.genSign(body, secretKey);
         if (sign == null || !sign.equals(serverSign)) {
+            log.error("用户五分钟内重复使用随机数");
             return handleNoAuth(response);
         }
         // 4. 请求的模拟接口是否存在，以及请求方法是否匹配
@@ -113,6 +122,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
             log.error("getInterfaceInfo error", e);
         }
         if (interfaceInfo == null) {
+            return handleNoAuth(response);
+        }
+        if (!innerUserInterfaceInfoService.thereIsALimit(invokeUser.getId())) {
             return handleNoAuth(response);
         }
         // todo 是否还有调用次数

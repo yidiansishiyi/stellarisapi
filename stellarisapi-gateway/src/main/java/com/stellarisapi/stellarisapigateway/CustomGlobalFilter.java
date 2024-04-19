@@ -6,6 +6,7 @@ import com.stellaris.stellarisapicommon.service.InnerInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserService;
 import com.stellarisapi.manager.RedisManager;
+import com.stellarisapi.manager.SingManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
@@ -109,9 +110,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         }
         // 实际情况中是从数据库中查出 secretKey
         String secretKey = invokeUser.getSecretKey();
-        String serverSign = com.stellarisapi.stellarisapiclientsdk.utils.SignUtils.genSign(body, secretKey);
+        String serverSign = SingManager.genSign(nonce, timestamp, body, accessKey, secretKey);
         if (sign == null || !sign.equals(serverSign)) {
-            log.error("用户五分钟内重复使用随机数");
+            log.error("sing 对比失败");
             return handleNoAuth(response);
         }
         // 4. 请求的模拟接口是否存在，以及请求方法是否匹配
@@ -127,12 +128,18 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (!innerUserInterfaceInfoService.thereIsALimit(invokeUser.getId())) {
             return handleNoAuth(response);
         }
+
         // todo 是否还有调用次数
         // 5. 请求转发，调用模拟接口 + 响应日志
         //        Mono<Void> filter = chain.filter(exchange);
         //        return filter;
         return handleResponse(exchange, chain, interfaceInfo.getId(), invokeUser.getId());
 
+    }
+
+    public static void main(String[] args) {
+        String serverSign = SingManager.genSign("5645", "12345678", "body", "accessKey", "secretKey");
+        System.out.println(serverSign);
     }
 
     /**

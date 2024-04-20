@@ -36,6 +36,11 @@ public class InterfaceInfo implements Serializable {
     private String url;
 
     /**
+     * 原始地址
+     */
+    private String originalUrl;
+
+    /**
      * 请求参数
      * [
      *   {"name": "username", "type": "string"}
@@ -67,6 +72,11 @@ public class InterfaceInfo implements Serializable {
      * 创建人
      */
     private Long userId;
+
+    /**
+     * 是否有特殊加密 0:是 1:否
+     */
+    private Integer  isEncryption;
 
     /**
      * 创建时间

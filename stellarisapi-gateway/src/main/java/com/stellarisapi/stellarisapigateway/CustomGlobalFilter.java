@@ -1,41 +1,59 @@
 package com.stellarisapi.stellarisapigateway;
 
+
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.json.JSONUtil;
+import com.alibaba.nacos.shaded.com.google.errorprone.annotations.Var;
 import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
 import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellaris.stellarisapicommon.service.InnerInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserService;
+import com.stellarisapi.adapter.AdapterRegistry;
+import com.stellarisapi.adapter.ParameterAdapter;
 import com.stellarisapi.manager.RedisManager;
 import com.stellarisapi.manager.SingManager;
+import com.stellarisapi.model.dto.RequestAdapterDTO;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.cloud.gateway.support.ServerWebExchangeUtils;
 import org.springframework.core.Ordered;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferFactory;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.codec.HttpMessageReader;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 
 /**
  * 全局过滤
  */
 @Slf4j
+@Data
 @Component
 public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
@@ -50,6 +68,9 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     @Resource
     private RedisManager redisManager;
+
+    @Resource
+    private AdapterRegistry adapterRegistry;
 
     private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1");
 
@@ -69,6 +90,25 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求来源地址：" + sourceAddress);
         log.info("请求来源地址：" + request.getRemoteAddress());
         ServerHttpResponse response = exchange.getResponse();
+        // 将 Flux<DataBuffer> 转换为字节数组
+        AtomicReference<String> bodyStringRef = new AtomicReference<>();
+
+        Flux<DataBuffer> body = exchange.getRequest().getBody();
+        body.subscribe(buffer -> {
+            byte[] bytes = new byte[buffer.readableByteCount()];
+            buffer.read(bytes);
+            DataBufferUtils.release(buffer);
+            String bodyString;
+            try {
+                bodyString = new String(bytes, StandardCharsets.UTF_8);
+                bodyStringRef.set(bodyString);
+                System.out.println(bodyString);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        String bodyString = bodyStringRef.get();
+        log.info("请求参数：" + bodyString);
         // 2. 访问控制 - 黑白名单(后期可以做一个表记录每一个接口的白名单)
 //        if (!IP_WHITE_LIST.contains(sourceAddress)) {
 //            response.setStatusCode(HttpStatus.FORBIDDEN);
@@ -80,7 +120,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         String nonce = headers.getFirst("nonce");
         String timestamp = headers.getFirst("timestamp");
         String sign = headers.getFirst("sign");
-        String body = headers.getFirst("body");
+//        String body = headers.getFirst("body");
 
         // todo 实际情况应该是去数据库中查是否已分配给用户
         User invokeUser = null;
@@ -110,7 +150,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         }
         // 实际情况中是从数据库中查出 secretKey
         String secretKey = invokeUser.getSecretKey();
-        String serverSign = SingManager.genSign(nonce, timestamp, body, accessKey, secretKey);
+        String serverSign = SingManager.genSign(nonce, timestamp, bodyString, accessKey, secretKey);
         if (sign == null || !sign.equals(serverSign)) {
             log.error("sing 对比失败");
             return handleNoAuth(response);
@@ -128,17 +168,59 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (!innerUserInterfaceInfoService.thereIsALimit(invokeUser.getId())) {
             return handleNoAuth(response);
         }
+        RequestAdapterDTO requestAdapterDTO = null;
+        if (interfaceInfo.getIsEncryption() == 0) {
+            ParameterAdapter prameterAdapter = adapterRegistry.getDataSourceByType(interfaceInfo.getId());
+            Map map = JSONUtil.toBean(bodyString, Map.class);
+            requestAdapterDTO = prameterAdapter.parameterAdapter(map);
+        } else {
+            Map map = JSONUtil.toBean(bodyString, Map.class);
+            requestAdapterDTO.setHeaders(map);
+        }
 
-        // todo 是否还有调用次数
-        // 5. 请求转发，调用模拟接口 + 响应日志
-        //        Mono<Void> filter = chain.filter(exchange);
-        //        return filter;
+        String originalUrl = interfaceInfo.getOriginalUrl();
+        Map<String, String> map = requestAdapterDTO.getHeaders();
+
+        // 在此处转换请求路径,更改请求参数 requestAdapterDTO 内的 haaders 为 map<string,string> 请纠正写法
+        // 4. 构建新的请求路径和请求参数
+        HttpHeaders headerss = new HttpHeaders();
+
+        // 创建一个 Map<String, String>
+
+
+        // 将 Map<String, String> 放入 HttpHeaders 对象中
+        for (Map.Entry<String, String> entry : map.entrySet()) {
+            headers.add(entry.getKey(), entry.getValue());
+        }
+
+        ServerHttpRequest newRequest = request.mutate()
+                .path(originalUrl)
+                .headers(httpHeaders -> {
+                    httpHeaders.putAll(headers);
+                })
+                .build();
+
+        // 5. 将新的请求路径设置到 Exchange 的属性中
+        exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
         return handleResponse(exchange, chain, interfaceInfo.getId(), invokeUser.getId());
 
+//        return chain.filter(exchange.mutate().request(newRequest).build())
+//                .then(Mono.defer(() -> handleResponse(exchange, chain , interfaceInfo.getId(), invokeUser.getId())));
     }
 
     public static void main(String[] args) {
-        String serverSign = SingManager.genSign("5645", "12345678", "body", "accessKey", "secretKey");
+
+        String bodyString = "{\"app_id\":\"56\",\"request_id\":\"56\",\"uid\":\"565\",\"content\":\"查詢\"}";
+        Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
+
+        // 打印转换后的 Map 对象
+        System.out.println(map);
+
+        Long l = System.currentTimeMillis();
+        Integer randomNumber2 = RandomUtil.randomInt(100);
+        System.out.println(randomNumber2);
+        System.out.println(l);
+        String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
         System.out.println(serverSign);
     }
 

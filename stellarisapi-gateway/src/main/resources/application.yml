@@ -1,9 +1,13 @@
-# 公共配置文件
-# @author <a href="https://github.com/li stellaris">程序员鱼皮</a>
-# @from <a href="https:// stellaris.icu">编程导航知识星球</a>
 server:
   port: 8090
 spring:
+  redis:
+    database: 2
+    port: 6379
+  redisson:
+    database: 2
+    host: localhost
+    port: 6379
   main:
     web-application-type: reactive
   cloud:
@@ -36,9 +40,6 @@ logging:
       springframework:
         cloud:
           gateway: trace
-
-# 原创_项目 [鱼皮](https://space.bilibili.com/12890453/)
-
 dubbo:
   application:
     name: dubbo-springboot-demo-provider

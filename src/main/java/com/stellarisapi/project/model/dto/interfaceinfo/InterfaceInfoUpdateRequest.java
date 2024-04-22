@@ -12,8 +12,6 @@ import java.io.Serializable;
 @Data
 public class InterfaceInfoUpdateRequest implements Serializable {
 
-    // [加入编程导航](https:// stellaris.icu) 入门捷径+交流答疑+项目实战+求职指导，帮你自学编程不走弯路
-
     /**
      * 主键
      */
@@ -33,6 +31,11 @@ public class InterfaceInfoUpdateRequest implements Serializable {
      * 接口地址
      */
     private String url;
+
+    /**
+     * 原始服务地址
+     */
+    private String originalUrl;
 
     /**
      * 请求参数

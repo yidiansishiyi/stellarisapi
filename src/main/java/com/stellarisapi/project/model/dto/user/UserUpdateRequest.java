@@ -32,10 +32,15 @@ public class UserUpdateRequest implements Serializable {
      */
     private String userAvatar;
 
+//    /**
+//     * 性别
+//     */
+//    private Integer gender;
+
     /**
-     * 性别
+     * 用户邮箱
      */
-    private Integer gender;
+    private String userMailbox;
 
     /**
      * 用户角色: user, admin

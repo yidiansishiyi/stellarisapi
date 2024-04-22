@@ -108,7 +108,7 @@ public class WmsensitiveController {
         LambdaQueryWrapper<Wmsensitive> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(StringUtils.isNotBlank(wsensitiveQuery.getKeyword()),
                 Wmsensitive::getSensitives, wsensitiveQuery.getKeyword());
-        Page<Wmsensitive> wsensitiveList = wmsensitiveService.page(new Page<>(wsensitiveQuery.getPageSize(), wsensitiveQuery.getPageSize()), queryWrapper);
+        Page<Wmsensitive> wsensitiveList = wmsensitiveService.page(new Page<>(wsensitiveQuery.getCurrent(), wsensitiveQuery.getPageSize()), queryWrapper);
         return ResultUtils.success(wsensitiveList);
     }
 

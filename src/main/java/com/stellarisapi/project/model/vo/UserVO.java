@@ -33,6 +33,11 @@ public class UserVO implements Serializable {
     private String userAvatar;
 
     /**
+     * 用户邮箱
+     */
+    private String userMailbox;
+
+    /**
      * 用户角色: user, admin
      */
     private String userRole;

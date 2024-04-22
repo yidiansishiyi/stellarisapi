@@ -3,6 +3,7 @@ package com.stellarisapi.project.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.stellaris.stellarisapicommon.model.entity.User;
+import com.stellarisapi.project.common.DeleteRequest;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -56,4 +57,7 @@ public interface UserService extends IService<User> {
      * @return
      */
     boolean userLogout(HttpServletRequest request);
+
+    Boolean resetAccessKey(DeleteRequest deleteRequest, HttpServletRequest request);
+
 }

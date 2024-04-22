@@ -239,5 +239,16 @@ public class UserController {
         return ResultUtils.success(userVOPage);
     }
 
+    @PostMapping("/resetAccessKey")
+    public BaseResponse<Boolean> resetAccessKey(@RequestBody DeleteRequest deleteRequest, HttpServletRequest request) {
+
+        if (deleteRequest == null || deleteRequest.getId() <= 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+
+        Boolean resetAccessKey = userService.resetAccessKey(deleteRequest, request);
+        return ResultUtils.success(resetAccessKey);
+    }
+
     // endregion
 }

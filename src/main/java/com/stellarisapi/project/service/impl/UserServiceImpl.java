@@ -2,8 +2,11 @@ package com.stellarisapi.project.service.impl;
 
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.stellaris.stellarisapicommon.model.enums.UserRoleEnum;
+import com.stellarisapi.project.common.DeleteRequest;
 import com.stellarisapi.project.common.ErrorCode;
 import com.stellarisapi.project.exception.BusinessException;
 import com.stellarisapi.project.mapper.UserMapper;
@@ -162,6 +165,33 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 移除登录态
         request.getSession().removeAttribute(USER_LOGIN_STATE);
         return true;
+    }
+
+    @Override
+    public Boolean resetAccessKey(DeleteRequest deleteRequest, HttpServletRequest request) {
+        User loginUser = getLoginUser(request);
+        Long loginUserId = loginUser.getId();
+        String userRole = loginUser.getUserRole();
+        UserRoleEnum enumByValue = UserRoleEnum.getEnumByValue(userRole);
+
+        if (loginUserId.equals(deleteRequest.getId()) && !UserRoleEnum.ADMIN.equals(enumByValue)) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
+        }
+
+        QueryWrapper<User> userUpdateWrapper = new QueryWrapper<>();
+        userUpdateWrapper.eq("id", loginUserId);
+
+        User updateUser = getOne(userUpdateWrapper);
+        if (updateUser == null) {
+            throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
+        }
+        Long userId = updateUser.getId();
+        String accessKey = DigestUtil.md5Hex(SALT  + userId + RandomUtil.randomNumbers(5));
+        String secretKey = DigestUtil.md5Hex(SALT + userId + RandomUtil.randomNumbers(8));
+        updateUser.setAccessKey(accessKey);
+        updateUser.setSecretKey(secretKey);
+
+        return updateById(updateUser);
     }
 
 }

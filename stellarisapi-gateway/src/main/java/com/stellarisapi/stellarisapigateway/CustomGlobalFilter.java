@@ -2,6 +2,7 @@ package com.stellarisapi.stellarisapigateway;
 
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.com.google.errorprone.annotations.Var;
 import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
@@ -39,7 +40,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,7 +47,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR;
 
 /**
  * 全局过滤
@@ -186,12 +185,19 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         HttpHeaders headerss = new HttpHeaders();
 
         // 创建一个 Map<String, String>
+        String result = HttpRequest.post(originalUrl)
+                .addHeaders(requestAdapterDTO.getHeaders())
+                .body(bodyString)
+                .execute()
+                .body();
 
-
+        System.out.println(result);
         // 将 Map<String, String> 放入 HttpHeaders 对象中
         for (Map.Entry<String, String> entry : map.entrySet()) {
             headers.add(entry.getKey(), entry.getValue());
         }
+
+
 
         ServerHttpRequest newRequest = request.mutate()
                 .path(originalUrl)
@@ -201,8 +207,8 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                 .build();
 
         // 5. 将新的请求路径设置到 Exchange 的属性中
-        exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
-        return handleResponse(exchange, chain, interfaceInfo.getId(), invokeUser.getId());
+//        exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
+        return handleResponse(exchange, chain, newRequest,interfaceInfo.getId(), invokeUser.getId());
 
 //        return chain.filter(exchange.mutate().request(newRequest).build())
 //                .then(Mono.defer(() -> handleResponse(exchange, chain , interfaceInfo.getId(), invokeUser.getId())));
@@ -210,7 +216,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     public static void main(String[] args) {
 
-        String bodyString = "{\"app_id\":\"56\",\"request_id\":\"56\",\"uid\":\"565\",\"content\":\"查詢\"}";
+        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e74\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"地球多大了\"}";
         Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
 
         // 打印转换后的 Map 对象
@@ -231,7 +237,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
      * @param chain
      * @return
      */
-    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain, long interfaceInfoId, long userId) {
+    public Mono<Void> handleResponse(ServerWebExchange exchange, GatewayFilterChain chain,ServerHttpRequest request, long interfaceInfoId, long userId) {
         try {
             ServerHttpResponse originalResponse = exchange.getResponse();
             // 缓存数据的工厂

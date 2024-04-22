@@ -61,11 +61,11 @@ public class WmsensitiveController {
      */
     @PostMapping("/add")
     @AuthCheck(mustRole = "admin")
-    public BaseResponse<Long> addInterfaceInfo(String wmsensitive, HttpServletRequest request) {
-        if (StrUtil.isBlank(wmsensitive)) {
+    public BaseResponse<Long> addInterfaceInfo(@RequestBody WsensitiveQuery wmsensitive) {
+        if (StrUtil.isBlank(wmsensitive.getKeyword())) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
-        Wmsensitive inscriptionWords = new Wmsensitive(wmsensitive);
+        Wmsensitive inscriptionWords = new Wmsensitive(wmsensitive.getKeyword());
         wmsensitiveService.save(inscriptionWords);
         long newInterfaceInfoId = inscriptionWords.getId();
         return ResultUtils.success(newInterfaceInfoId);

@@ -2,7 +2,6 @@ package com.stellarisapi.adapter;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.SecureUtil;
-import cn.hutool.json.JSONUtil;
 import com.stellarisapi.model.dto.RequestAdapterDTO;
 import org.springframework.stereotype.Component;
 
@@ -12,8 +11,8 @@ import java.util.*;
 @Component
 public class ZelinAiParameterAdapter implements ParameterAdapter{
 
-    private String appkey = "z9uv10ti27a3me53ui7q42tdzt0q05ze";
-    private String appsecret = "8udguinu4xs5aql8cn7uhww8p69ngxok";
+    private String appkey = "c9bac52057094ec08a0cd96af0d2b664";
+    private String appsecret = "dd4c5ee16c7f41888f3a633203f93e52";
 
     @Override
     public RequestAdapterDTO parameterAdapter(Map<String, Object> originalParameters) {
@@ -30,13 +29,13 @@ public class ZelinAiParameterAdapter implements ParameterAdapter{
         adaptedParameters.put("nonce", nonce);
         String timestamp = String.valueOf(System.currentTimeMillis() / 1000);
         adaptedParameters.put("timestamp", timestamp);
-        adaptedParameters.put("signature", generateNonce(originalParameters, appsecret));
+        adaptedParameters.put("signature", generateNonce(adaptedParameters, appsecret));
         adaptedParameters.put("Content-Type", "application/json;charset=UTF-8");
 
         return new RequestAdapterDTO(adaptedParameters);
     }
 
-    public static String generateNonce(Map<String,Object> body, String appsecret) {
+    public static String generateNonce(Map<String,String> body, String appsecret) {
         List<String> sortedKeys = new ArrayList<>(body.keySet());
         Collections.sort(sortedKeys);
         // 拼接键值对成字符串s1

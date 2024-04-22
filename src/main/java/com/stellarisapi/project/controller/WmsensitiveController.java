@@ -103,7 +103,7 @@ public class WmsensitiveController {
      * @return
      */
     @AuthCheck(mustRole = "admin")
-    @GetMapping("/list")
+    @GetMapping("/list/page")
     public BaseResponse<Page<Wmsensitive>> listInterfaceInfo(WsensitiveQuery wsensitiveQuery) {
         LambdaQueryWrapper<Wmsensitive> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(StringUtils.isNotBlank(wsensitiveQuery.getKeyword()),

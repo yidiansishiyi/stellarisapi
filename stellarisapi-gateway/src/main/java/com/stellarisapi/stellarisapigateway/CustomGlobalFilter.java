@@ -36,10 +36,12 @@ import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.annotation.Resource;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -182,52 +184,33 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
         // 在此处转换请求路径,更改请求参数 requestAdapterDTO 内的 haaders 为 map<string,string> 请纠正写法
         // 4. 构建新的请求路径和请求参数
-        HttpHeaders headerss = new HttpHeaders();
+        HttpHeaders newHeaders = new HttpHeaders();
 
-        // 创建一个 Map<String, String>
-        String result = HttpRequest.post(originalUrl)
-                .addHeaders(requestAdapterDTO.getHeaders())
-                .body(bodyString)
-                .execute()
-                .body();
+        // 创建一个 headerssMap<String, String>
+//        String result = HttpRequest.post(originalUrl)
+//                .addHeaders(requestAdapterDTO.getHeaders())
+//                .body(bodyString)
+//                .execute()
+//                .body();
 
-        System.out.println(result);
+//        System.out.println(result);
         // 将 Map<String, String> 放入 HttpHeaders 对象中
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            headers.add(entry.getKey(), entry.getValue());
+            newHeaders.add(entry.getKey(), entry.getValue());
         }
 
+        URI uri = UriComponentsBuilder.fromUriString(originalUrl).build().toUri();
 
-
+        // 问题出现在这  它 originalUrl 要求 / 开头,实际上我需要访问 https://zelinai.com/biz/v1/app/chat/sync
         ServerHttpRequest newRequest = request.mutate()
-                .path(originalUrl)
+                .uri(uri)
                 .headers(httpHeaders -> {
-                    httpHeaders.putAll(headers);
+                    httpHeaders.putAll(newHeaders);
                 })
                 .build();
 
         // 5. 将新的请求路径设置到 Exchange 的属性中
-//        exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, newRequest.getURI());
         return handleResponse(exchange, chain, newRequest,interfaceInfo.getId(), invokeUser.getId());
-
-//        return chain.filter(exchange.mutate().request(newRequest).build())
-//                .then(Mono.defer(() -> handleResponse(exchange, chain , interfaceInfo.getId(), invokeUser.getId())));
-    }
-
-    public static void main(String[] args) {
-
-        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e74\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"地球多大了\"}";
-        Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
-
-        // 打印转换后的 Map 对象
-        System.out.println(map);
-
-        Long l = System.currentTimeMillis();
-        Integer randomNumber2 = RandomUtil.randomInt(100);
-        System.out.println(randomNumber2);
-        System.out.println(l);
-        String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
-        System.out.println(serverSign);
     }
 
     /**
@@ -284,13 +267,29 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
                     }
                 };
                 // 设置 response 对象为装饰过的
-                return chain.filter(exchange.mutate().response(decoratedResponse).build());
+                return chain.filter(exchange.mutate().request(request).response(decoratedResponse).build());
             }
             return chain.filter(exchange); // 降级处理返回数据
         } catch (Exception e) {
             log.error("网关处理响应异常" + e);
             return chain.filter(exchange);
         }
+    }
+
+    public static void main(String[] args) {
+
+        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e83\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"地球多大了\"}";
+        Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
+
+        // 打印转换后的 Map 对象
+        System.out.println(map);
+
+        Long l = System.currentTimeMillis();
+        Integer randomNumber2 = RandomUtil.randomInt(100);
+        System.out.println(randomNumber2);
+        System.out.println(l);
+        String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
+        System.out.println(serverSign);
     }
 
     @Override

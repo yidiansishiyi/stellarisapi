@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -248,6 +249,12 @@ public class UserController {
 
         Boolean resetAccessKey = userService.resetAccessKey(deleteRequest, request);
         return ResultUtils.success(resetAccessKey);
+    }
+
+
+    @GetMapping("/getAccessKey")
+    public BaseResponse<Map<String,Object>> getAccessKey(@RequestBody HttpServletRequest request) {
+        return ResultUtils.success(userService.getAccessKey(request));
     }
 
     // endregion

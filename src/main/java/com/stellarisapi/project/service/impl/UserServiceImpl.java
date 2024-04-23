@@ -3,6 +3,7 @@ package com.stellarisapi.project.service.impl;
 
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.crypto.symmetric.SymmetricCrypto;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.stellaris.stellarisapicommon.model.enums.UserRoleEnum;
@@ -19,6 +20,9 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static cn.hutool.crypto.digest.DigestUtil.*;
 import static com.stellarisapi.project.constant.UserConstant.ADMIN_ROLE;
@@ -192,6 +196,65 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         updateUser.setSecretKey(secretKey);
 
         return updateById(updateUser);
+    }
+
+    @Override
+    public Map<String, Object> getAccessKey(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+        String accessKey = user.getAccessKey();
+        String secretKey = user.getSecretKey();
+        Long userId = user.getId();
+        String key = userId + "yidiansishiyi";
+        SymmetricCrypto aes = new SymmetricCrypto("AES", key.getBytes());
+
+        // AES 加密
+        byte[] accessKeyBytes = aes.encrypt(accessKey);
+        byte[] secretKeyBytes = aes.encrypt(secretKey);
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("accessKeyBytes" ,accessKeyBytes);
+        resMap.put("secretKeyBytes" ,secretKeyBytes);
+
+//        byte[] decryptBytes = aes.decrypt(resMap.get(secretKeyBytes));
+
+        // 将字节数组转换为字符串
+//        String decryptedStr = new String(decryptBytes);
+        return resMap;
+    }
+
+    public static void main(String[] args) {
+        // 待加密的原始数据
+        String data = "Hello, AES!";
+
+        String accessKey = "12d";
+        String secretKey = "12djij";
+        Long userId = 1l;
+        String key = userId + "yidiansishiyi";
+        SymmetricCrypto aes = new SymmetricCrypto("AES", key.getBytes());
+
+        // AES 加密
+        byte[] accessKeyBytes = aes.encrypt(accessKey);
+        String s = new String(accessKeyBytes);
+        byte[] secretKeyBytes = aes.encrypt(secretKey);
+        HashMap<String, Object> resMap = new HashMap<>();
+        resMap.put("accessKeyBytes" ,s);
+        resMap.put("secretKeyBytes" ,secretKeyBytes);
+        String s1 = resMap.get(secretKeyBytes).toString();
+
+
+//        byte[] decryptBytes = aes.decrypt(byte[] resMap.get(secretKeyBytes));
+
+        // 将字节数组转换为字符串
+//        String decryptedStr = new String(decryptBytes);
+
+        // AES 解密
+//        byte[] decryptBytes = aes.decrypt(encryptBytes);
+//
+//        // 将字节数组转换为字符串
+//        String decryptedStr = new String(decryptBytes);
+
+        // 输出解密后的数据
+//        System.out.println("解密后的数据：" + decryptedStr);
     }
 
 }

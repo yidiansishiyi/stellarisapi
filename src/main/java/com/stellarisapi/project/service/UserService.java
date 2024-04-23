@@ -6,6 +6,7 @@ import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellarisapi.project.common.DeleteRequest;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Map;
 
 /**
  * 用户服务
@@ -59,5 +60,7 @@ public interface UserService extends IService<User> {
     boolean userLogout(HttpServletRequest request);
 
     Boolean resetAccessKey(DeleteRequest deleteRequest, HttpServletRequest request);
+
+    Map<String, Object> getAccessKey(HttpServletRequest request);
 
 }

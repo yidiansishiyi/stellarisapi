@@ -16,9 +16,9 @@ spring:
         - AddResponseHeader=source,  stellaris
       routes:
         - id: api_route
-          uri: http://localhost:8123
+          uri: https://zelinai.com/biz/v1/app/chat/sync
           predicates:
-            - Path=/api/**
+            - Path=/api/cs/**
 #        - id: add_request_header_route
 #          uri: http://localhost:8123
 #          predicates:

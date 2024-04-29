@@ -252,8 +252,8 @@ public class UserController {
     }
 
 
-    @GetMapping("/getAccessKey")
-    public BaseResponse<Map<String,Object>> getAccessKey(@RequestBody HttpServletRequest request) {
+    @GetMapping("/getSignatureVoucher")
+    public BaseResponse<Map<String,Object>> getAccessKey(HttpServletRequest request) {
         try {
             return ResultUtils.success(userService.getAccessKey(request));
         } catch (Exception e) {

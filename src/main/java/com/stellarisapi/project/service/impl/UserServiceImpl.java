@@ -13,6 +13,7 @@ import com.stellarisapi.project.exception.BusinessException;
 import com.stellarisapi.project.mapper.UserMapper;
 import com.stellarisapi.project.service.UserService;
 import com.stellaris.stellarisapicommon.model.entity.User;
+import com.stellarisapi.project.utils.SymmetricEncryptionUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -199,26 +200,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public Map<String, Object> getAccessKey(HttpServletRequest request) {
+    public Map<String, Object> getAccessKey(HttpServletRequest request) throws Exception {
         Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
         User user = (User) userObj;
         String accessKey = user.getAccessKey();
         String secretKey = user.getSecretKey();
         Long userId = user.getId();
-        String key = userId + "yidiansishiyi";
-        SymmetricCrypto aes = new SymmetricCrypto("AES", key.getBytes());
+        String userMailbox = user.getUserMailbox();
 
-        // AES 加密
-        byte[] accessKeyBytes = aes.encrypt(accessKey);
-        byte[] secretKeyBytes = aes.encrypt(secretKey);
+        String secretKeyAES = SymmetricEncryptionUtil.getSecretKeyAES(userId.toString(), userMailbox);
+        String ak = SymmetricEncryptionUtil.encryptAES(accessKey, secretKeyAES);
+        String ck = SymmetricEncryptionUtil.encryptAES(secretKey, secretKeyAES);
+
         HashMap<String, Object> resMap = new HashMap<>();
-        resMap.put("accessKeyBytes" ,accessKeyBytes);
-        resMap.put("secretKeyBytes" ,secretKeyBytes);
-
-//        byte[] decryptBytes = aes.decrypt(resMap.get(secretKeyBytes));
-
-        // 将字节数组转换为字符串
-//        String decryptedStr = new String(decryptBytes);
+        resMap.put("accessKeyBytes" ,ak);
+        resMap.put("secretKeyBytes" ,ck);
         return resMap;
     }
 

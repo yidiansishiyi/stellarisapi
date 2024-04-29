@@ -254,7 +254,11 @@ public class UserController {
 
     @GetMapping("/getAccessKey")
     public BaseResponse<Map<String,Object>> getAccessKey(@RequestBody HttpServletRequest request) {
-        return ResultUtils.success(userService.getAccessKey(request));
+        try {
+            return ResultUtils.success(userService.getAccessKey(request));
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
     }
 
     // endregion

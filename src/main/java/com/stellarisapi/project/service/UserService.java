@@ -61,6 +61,6 @@ public interface UserService extends IService<User> {
 
     Boolean resetAccessKey(DeleteRequest deleteRequest, HttpServletRequest request);
 
-    Map<String, Object> getAccessKey(HttpServletRequest request);
+    Map<String, Object> getAccessKey(HttpServletRequest request) throws Exception;
 
 }

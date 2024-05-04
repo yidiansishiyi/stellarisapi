@@ -11,14 +11,28 @@ spring:
   main:
     web-application-type: reactive
   cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: 458de3da-5c3f-4d03-85ca-a26aee543efe
+        group: yidiansishiyi
+      config:
+        import-check:
+          enabled: false
     gateway:
       default-filters:
         - AddResponseHeader=source,  stellaris
-      routes:
-        - id: api_route
-          uri: https://zelinai.com/biz/v1/app/chat/sync
-          predicates:
-            - Path=/api/cs/**
+gateway:
+  routes:
+    config:
+      data-id: publicApi  #动态路由
+      group: yidiansishiyi
+      namespace: 458de3da-5c3f-4d03-85ca-a26aee543efe
+#      routes:
+#        - id: api_route
+#          uri: https://zelinai.com/biz/v1/app/chat/sync
+#          predicates:
+#            - Path=/api/cs/**
 #        - id: add_request_header_route
 #          uri: http://localhost:8123
 #          predicates:

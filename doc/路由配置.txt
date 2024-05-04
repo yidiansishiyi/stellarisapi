@@ -1,0 +1,15 @@
+[
+    {
+        "predicates":[
+            {
+                "args":{
+                    "pattern":"/api/ai/**"
+                },
+                "name":"Path"
+            }
+        ],
+        "id":"zelinai",
+        "uri":"https://zelinai.com/biz/v1/app/chat/sync",
+        "order":1
+    }
+]

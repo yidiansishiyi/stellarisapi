@@ -278,7 +278,7 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     public static void main(String[] args) {
 
-        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e83\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"地球多大了\"}";
+        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e83\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"太阳多大\"}";
         Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
 
         // 打印转换后的 Map 对象

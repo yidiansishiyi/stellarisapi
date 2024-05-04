@@ -26,35 +26,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class StellarisapiGatewayApplication {
 
-    @DubboReference
-    private DemoService demoService;
-
     public static void main(String[] args) {
-
         ConfigurableApplicationContext context = SpringApplication.run(StellarisapiGatewayApplication.class, args);
         StellarisapiGatewayApplication application = context.getBean(StellarisapiGatewayApplication.class);
-//        String result = application.doSayHello("world");
-//        String result2 = application.doSayHello2("world");
-//        System.out.println("result: " + result);
-//        System.out.println("result: " + result2);
     }
-
-//    public String doSayHello(String name) {
-//        return demoService.sayHello(name);
-//    }
-//
-//    public String doSayHello2(String name) {
-//        return demoService.sayHello2(name);
-//    }
-
-//    @Bean
-//    public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
-//        return builder.routes()
-//                .route("tobaidu", r -> r.path("/baidu")
-//                        .uri("https://www.baidu.com"))
-//                .route("to stellarisicu", r -> r.path("/ stellarisicu")
-//                        .uri("http:// stellaris.icu"))
-//                .build();
-//    }
 
 }

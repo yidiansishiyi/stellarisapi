@@ -37,6 +37,22 @@ spring:
         smtp:
           ssl:
             enable: true
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        namespace: 458de3da-5c3f-4d03-85ca-a26aee543efe
+        group: yidiansishiyi
+      config:
+        import-check:
+          enabled: false
+gateway:
+  routes:
+    config:
+      data-id: publicApi  #动态路由
+      group: yidiansishiyi
+      namespace: 458de3da-5c3f-4d03-85ca-a26aee543efe
+
 server:
   port: 7529
   servlet:

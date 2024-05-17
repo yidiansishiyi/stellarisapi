@@ -1,5 +1,6 @@
 package com.stellarisapi.project.controller;
 
+import cn.hutool.core.util.RandomUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
@@ -14,12 +15,14 @@ import com.stellarisapi.project.service.UserService;
 import com.stellaris.stellarisapicommon.model.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
+import static cn.hutool.crypto.digest.DigestUtil.*;
 import java.util.stream.Collectors;
 
 /**
@@ -95,7 +98,6 @@ public class UserController {
         return ResultUtils.success(result);
     }
 
-    // [加入编程导航](https:// stellaris.icu) 深耕编程提升【两年半】、国内净值【最高】的编程社群、用心服务【20000+】求学者、帮你自学编程【不走弯路】
 
     /**
      * 获取当前登录用户
@@ -129,6 +131,16 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userAddRequest, user);
+        String encryptPassword = DigestUtils.md5DigestAsHex(("yidiansishiyi" + userAddRequest.getUserPassword()).getBytes());
+        // 3. 分配 accessKey, secretKey
+        String accessKey = md5Hex("yidiansishiyi" + user.getUserAccount() + RandomUtil.randomNumbers(5));
+        String secretKey = md5Hex("yidiansishiyi" + user.getUserAccount() + RandomUtil.randomNumbers(8));
+        // 4. 插入数据
+
+        user.setAccessKey(accessKey);
+        user.setUserPassword(encryptPassword);
+        user.setSecretKey(secretKey);
+
         boolean result = userService.save(user);
         if (!result) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);

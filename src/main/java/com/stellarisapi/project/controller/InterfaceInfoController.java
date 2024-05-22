@@ -1,10 +1,17 @@
 package com.stellarisapi.project.controller;
 
+import cn.hutool.json.JSONUtil;
+import com.alibaba.cloud.nacos.NacosConfigProperties;
+import com.alibaba.nacos.api.config.ConfigService;
+import com.alibaba.nacos.api.exception.NacosException;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.google.gson.Gson;
+import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
+import com.stellaris.stellarisapicommon.model.entity.NacosConfigVouter;
+import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellarisapi.project.annotation.AuthCheck;
 import com.stellarisapi.project.common.*;
+import com.stellarisapi.project.config.GatewayRouteConfigProperties;
 import com.stellarisapi.project.constant.CommonConstant;
 import com.stellarisapi.project.exception.BusinessException;
 import com.stellarisapi.project.model.dto.interfaceinfo.InterfaceInfoAddRequest;
@@ -14,22 +21,19 @@ import com.stellarisapi.project.model.dto.interfaceinfo.InterfaceInfoUpdateReque
 import com.stellarisapi.project.model.enums.InterfaceInfoStatusEnum;
 import com.stellarisapi.project.service.InterfaceInfoService;
 import com.stellarisapi.project.service.UserService;
-//import com.stellarisapi.stellarisapiclientsdk.client.stellarisapiClient;
-import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
-import com.stellaris.stellarisapicommon.model.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 接口管理
- *
- 
  */
 @RestController
 @RequestMapping("/interfaceInfo")
@@ -42,10 +46,17 @@ public class InterfaceInfoController {
     @Resource
     private UserService userService;
 
-//    @Resource
-//    private stellarisapiClient stellarisapiClient;
+    /**
+     * nacos 配置服务
+     */
+    @Resource
+    private ConfigService configService;
 
-    // region 增删改查
+    @Resource
+    private GatewayRouteConfigProperties configProperties;
+
+    @Resource
+    private NacosConfigProperties nacosConfigProperties;
 
     /**
      * 创建
@@ -65,6 +76,35 @@ public class InterfaceInfoController {
         interfaceInfoService.validInterfaceInfo(interfaceInfo, true);
         User loginUser = userService.getLoginUser(request);
         interfaceInfo.setUserId(loginUser.getId());
+        try {
+            String initConfigInfo = configService.getConfig(configProperties.getDataId(), configProperties.getGroup(), nacosConfigProperties.getTimeout());
+            List<NacosConfigVouter> nacosConfigVouterList = JSONUtil.toList(initConfigInfo, NacosConfigVouter.class);
+
+            // 构建拦截逻辑
+            NacosConfigVouter.Predicates predicate = new NacosConfigVouter.Predicates();
+            predicate.setArgs(new NacosConfigVouter.Predicates.Args(interfaceInfo.getUrl()));
+            predicate.setName(interfaceInfo.getName());
+            ArrayList<NacosConfigVouter.Predicates> predicateList = new ArrayList<>();
+            predicateList.add(predicate);
+
+            // 构建优先级,跳转逻辑
+            NacosConfigVouter nacosConfigVouter = new NacosConfigVouter();
+            nacosConfigVouter.setPredicates(predicateList);
+            nacosConfigVouter.setId(interfaceInfo.getId().toString());
+            nacosConfigVouter.setFilters(new ArrayList<>());
+            nacosConfigVouter.setUri(interfaceInfo.getOriginalUrl());
+            nacosConfigVouter.setOrder(1);
+
+            nacosConfigVouterList.add(nacosConfigVouter);
+
+            // 更新新的 json 配置
+            String newConfigJson = JSONUtil.toJsonStr(nacosConfigVouterList);
+            configService.publishConfig(configProperties.getDataId(), configProperties.getGroup(), newConfigJson, "json");
+
+        } catch (NacosException e) {
+            log.error("错误" + e.getMessage());
+        }
+
         boolean result = interfaceInfoService.save(interfaceInfo);
         if (!result) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
@@ -272,7 +312,7 @@ public class InterfaceInfoController {
      */
     @PostMapping("/invoke")
     public BaseResponse<Object> invokeInterfaceInfo(@RequestBody InterfaceInfoInvokeRequest interfaceInfoInvokeRequest,
-                                                     HttpServletRequest request) {
+                                                    HttpServletRequest request) {
         if (interfaceInfoInvokeRequest == null || interfaceInfoInvokeRequest.getId() <= 0) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }

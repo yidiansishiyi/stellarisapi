@@ -22,7 +22,7 @@
             LEFT JOIN interface_info ii
             ON uii.interfaceInfoId = ii.id
         WHERE
-            leftNum = 0 AND uii.status = 0
+            uii.leftNum = 0 AND uii.status = 0
         AND u.userMailbox IS NOT NULL;
     </select>
 </mapper>

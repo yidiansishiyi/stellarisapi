@@ -118,5 +118,9 @@ public class WmsensitiveController {
         return ResultUtils.success(SensitiveWordUtil.getDictionaryMap());
     }
 
+    @PostMapping("/check")
+    public BaseResponse<Map<String, Integer>> check(@RequestBody WsensitiveQuery text) {
+        return ResultUtils.success(SensitiveWordUtil.matchWords(text.getKeyword()));
+    }
 
 }

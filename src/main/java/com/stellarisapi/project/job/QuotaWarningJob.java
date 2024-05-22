@@ -17,7 +17,7 @@ public class QuotaWarningJob {
     /*
      * 每小时定时检测接口配额
      */
-    @Scheduled(fixedRate = 60 * 60 * 1000)
+    @Scheduled(fixedRate =  60 * 1000)
     void sendEmailAlerts() {
         earlyWarningService.sendWarningMessage();
     }

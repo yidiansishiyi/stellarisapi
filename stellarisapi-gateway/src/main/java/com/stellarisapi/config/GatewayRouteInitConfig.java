@@ -1,4 +1,5 @@
 package com.stellarisapi.config;
+
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.cloud.nacos.NacosConfigProperties;
 import com.alibaba.nacos.api.config.ConfigService;
@@ -6,13 +7,14 @@ import com.alibaba.nacos.api.config.listener.Listener;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import com.stellarisapi.routes.RouteService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.cloud.gateway.route.RouteDefinition;
 import org.springframework.stereotype.Component;
+
+import static cn.hutool.crypto.digest.DigestUtil.*;
 import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Objects;
@@ -69,6 +71,7 @@ public class GatewayRouteInitConfig {
                         } catch (JsonProcessingException e) {
                             log.error("解析路由配置出错，" + e.getMessage(), e);
                         }
+
                         for (RouteDefinition definition : Objects.requireNonNull(routeDefinitions)) {
                             routeService.update(definition);
                         }
@@ -77,7 +80,7 @@ public class GatewayRouteInitConfig {
                     }
                 }
             });
-            boolean b = configService.publishConfig(configProperties.getDataId(), configProperties.getGroup(),initConfigInfo,"json");
+            boolean b = configService.publishConfig(configProperties.getDataId(), configProperties.getGroup(), initConfigInfo, "json");
             log.info("获取网关当前动态路由配置:\r\n{}", initConfigInfo);
             if (StrUtil.isNotEmpty(initConfigInfo)) {
                 List<RouteDefinition> routeDefinitions = objectMapper.readValue(initConfigInfo, new TypeReference<List<RouteDefinition>>() {

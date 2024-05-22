@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 /**
  * 入口类
- *
  */
 @SpringBootApplication
 @MapperScan("com.stellarisapi.project.mapper")

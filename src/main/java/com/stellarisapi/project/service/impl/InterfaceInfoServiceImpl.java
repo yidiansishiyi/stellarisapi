@@ -1,5 +1,6 @@
 package com.stellarisapi.project.service.impl;
 
+import com.alibaba.nacos.api.config.ConfigService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.stellarisapi.project.common.ErrorCode;
 import com.stellarisapi.project.exception.BusinessException;
@@ -7,7 +8,10 @@ import com.stellarisapi.project.mapper.InterfaceInfoMapper;
 import com.stellarisapi.project.service.InterfaceInfoService;
 import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
 
 /**
  * 接口信息服务实现类

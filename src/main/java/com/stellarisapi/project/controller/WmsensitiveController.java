@@ -67,6 +67,7 @@ public class WmsensitiveController {
         }
         Wmsensitive inscriptionWords = new Wmsensitive(wmsensitive.getKeyword());
         wmsensitiveService.save(inscriptionWords);
+        initWmsensitive();
         long newInterfaceInfoId = inscriptionWords.getId();
         return ResultUtils.success(newInterfaceInfoId);
     }
@@ -93,6 +94,7 @@ public class WmsensitiveController {
         }
         // 管理员可删除
         boolean b = wmsensitiveService.removeById(id);
+        initWmsensitive();
         return ResultUtils.success(b);
     }
 

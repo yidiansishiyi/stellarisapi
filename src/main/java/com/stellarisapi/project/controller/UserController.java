@@ -1,6 +1,7 @@
 package com.stellarisapi.project.controller;
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
@@ -178,6 +179,14 @@ public class UserController {
         }
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
+        String userPassword = userUpdateRequest.getUserPassword();
+        if (userPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        if (StrUtil.isNotBlank(userPassword)) {
+            String encryptPassword = DigestUtils.md5DigestAsHex(("yidiansishiyi" + userUpdateRequest.getUserPassword()).getBytes());
+            user.setUserPassword(encryptPassword);
+        }
         boolean result = userService.updateById(user);
         return ResultUtils.success(result);
     }

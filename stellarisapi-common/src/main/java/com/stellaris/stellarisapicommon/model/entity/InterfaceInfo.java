@@ -76,7 +76,7 @@ public class InterfaceInfo implements Serializable {
     /**
      * 是否有特殊加密 0:是 1:否
      */
-    private Integer  isEncryption;
+    private Integer isEncryption;
 
     /**
      * 创建时间

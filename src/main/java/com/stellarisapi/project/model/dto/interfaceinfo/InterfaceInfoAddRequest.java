@@ -52,4 +52,9 @@ public class InterfaceInfoAddRequest implements Serializable {
      */
     private String method;
 
+    /**
+     * 是否有特殊加密 0:是 1:否
+     */
+    private Integer isEncryption = 0;
+
 }

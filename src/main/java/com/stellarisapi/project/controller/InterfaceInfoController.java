@@ -76,14 +76,17 @@ public class InterfaceInfoController {
         interfaceInfoService.validInterfaceInfo(interfaceInfo, true);
         User loginUser = userService.getLoginUser(request);
         interfaceInfo.setUserId(loginUser.getId());
+        boolean result = false;
         try {
+            interfaceInfo.setUrl("http://localhost:8090" + interfaceInfo.getUrl());
+            result = interfaceInfoService.save(interfaceInfo);
             String initConfigInfo = configService.getConfig(configProperties.getDataId(), configProperties.getGroup(), nacosConfigProperties.getTimeout());
             List<NacosConfigVouter> nacosConfigVouterList = JSONUtil.toList(initConfigInfo, NacosConfigVouter.class);
 
             // 构建拦截逻辑
             NacosConfigVouter.Predicates predicate = new NacosConfigVouter.Predicates();
             predicate.setArgs(new NacosConfigVouter.Predicates.Args(interfaceInfo.getUrl()));
-            predicate.setName(interfaceInfo.getName());
+            predicate.setName("Path");
             ArrayList<NacosConfigVouter.Predicates> predicateList = new ArrayList<>();
             predicateList.add(predicate);
 
@@ -96,16 +99,15 @@ public class InterfaceInfoController {
             nacosConfigVouter.setOrder(1);
 
             nacosConfigVouterList.add(nacosConfigVouter);
-
-            // 更新新的 json 配置
             String newConfigJson = JSONUtil.toJsonStr(nacosConfigVouterList);
+            // 更新新的 json 配置
+//            String prettyJsonString = JSONUtil. parseObj(newConfigJson).toStringPretty();
             configService.publishConfig(configProperties.getDataId(), configProperties.getGroup(), newConfigJson, "json");
-
+            configService.shutDown();
         } catch (NacosException e) {
             log.error("错误" + e.getMessage());
         }
 
-        boolean result = interfaceInfoService.save(interfaceInfo);
         if (!result) {
             throw new BusinessException(ErrorCode.OPERATION_ERROR);
         }

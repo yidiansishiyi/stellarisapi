@@ -1,8 +1,7 @@
-package com.stellarisapi.stellarisapigateway;
+package com.stellarisapi;
 
-import com.stellarisapi.project.provider.DemoService;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
@@ -22,8 +21,8 @@ import org.springframework.stereotype.Service;
         DataSourceTransactionManagerAutoConfiguration.class,
         HibernateJpaAutoConfiguration.class})
 @EnableDubbo
-@ComponentScan(basePackages = {"com.stellarisapi"})
-@Service
+//@ComponentScan("com.stellarisapi")
+//@ComponentScan(basePackages = {"com.stellarisapi"})
 public class StellarisapiGatewayApplication {
 
     public static void main(String[] args) {

@@ -2,9 +2,11 @@ package com.stellarisapi.stellarisapigateway;
 
 
 import cn.hutool.core.util.RandomUtil;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.nacos.shaded.com.google.errorprone.annotations.Var;
+//import com.stellaris.manager.RedisLimiterManager;
 import com.stellaris.stellarisapicommon.model.entity.InterfaceInfo;
 import com.stellaris.stellarisapicommon.model.entity.User;
 import com.stellaris.stellarisapicommon.service.InnerInterfaceInfoService;
@@ -12,6 +14,7 @@ import com.stellaris.stellarisapicommon.service.InnerUserInterfaceInfoService;
 import com.stellaris.stellarisapicommon.service.InnerUserService;
 import com.stellarisapi.adapter.AdapterRegistry;
 import com.stellarisapi.adapter.ParameterAdapter;
+import com.stellarisapi.manager.RedisLimiterManager;
 import com.stellarisapi.manager.RedisManager;
 import com.stellarisapi.manager.SingManager;
 import com.stellarisapi.model.dto.RequestAdapterDTO;
@@ -40,6 +43,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
@@ -73,6 +77,14 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
     @Resource
     private AdapterRegistry adapterRegistry;
 
+    @Resource
+    private RedisLimiterManager redisLimiterManager;
+
+    @PostConstruct
+    void initialize() {
+        System.out.println("加載測試1");
+    }
+
     private static final List<String> IP_WHITE_LIST = Arrays.asList("127.0.0.1");
 
     private static final String INTERFACE_HOST = "http://localhost:8090";
@@ -91,6 +103,12 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         log.info("请求来源地址：" + sourceAddress);
         log.info("请求来源地址：" + request.getRemoteAddress());
         ServerHttpResponse response = exchange.getResponse();
+        RedisLimiterManager.RateLimiterKeyInfo rateLimiterKeyInfo = new RedisLimiterManager.RateLimiterKeyInfo();
+        rateLimiterKeyInfo.setUrl(path);
+//        rateLimiterKeyInfo.setUserSign(sourceAddress);
+        rateLimiterKeyInfo.setRequestMethod(method);
+        rateLimiterKeyInfo.setScene(1);
+        redisLimiterManager.interceptionAndCurrentLimiting(rateLimiterKeyInfo);
         // 将 Flux<DataBuffer> 转换为字节数组
         AtomicReference<String> bodyStringRef = new AtomicReference<>();
 
@@ -139,16 +157,16 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (Long.parseLong(nonce) > 10000L) {
             return handleNoAuth(response);
         }
-        // 时间和当前时间不能超过 5 分钟
-        Long currentTime = System.currentTimeMillis() / 1000;
-        final Long FIVE_MINUTES = 60 * 5L;
-        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
-            return handleNoAuth(response);
-        }
-        // 确保一个来源的随机数五分钟内唯一(长度暂定为一个mysql text 的长度)
-        if (!redisManager.storeRandomNumber(sourceAddress, nonce, 65535)) {
-            return handleNoAuth(response);
-        }
+//        // 时间和当前时间不能超过 5 分钟
+//        Long currentTime = System.currentTimeMillis() / 1000;
+//        final Long FIVE_MINUTES = 60 * 5L;
+//        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
+//            return handleNoAuth(response);
+//        }
+//        // 确保一个来源的随机数五分钟内唯一(长度暂定为一个mysql text 的长度)
+//        if (!redisManager.storeRandomNumber(sourceAddress, nonce, 65535)) {
+//            return handleNoAuth(response);
+//        }
         // 实际情况中是从数据库中查出 secretKey
         String secretKey = invokeUser.getSecretKey();
         String serverSign = SingManager.genSign(nonce, timestamp, bodyString, accessKey, secretKey);
@@ -294,7 +312,6 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 //    }
 
     public static void main(String[] args) {
-
 //        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e83\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"太阳多大\"}";
         String bodyString = "{\"keyword\": \"是史昂傻逼臭傻逼打傻逼贱女煞笔东西\"}";
         Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
@@ -308,6 +325,18 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         System.out.println(l);
         String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
         System.out.println(serverSign);
+
+        for (int i = 0; i < 100; i++) {
+            String body = HttpRequest.post("http://localhost:8090/api/wmsensitiveInfo/check")
+                    .header("accessKey", "fb15d434781e1f9fa984609b5e099014")
+                    .header("nonce", randomNumber2.toString())
+                    .header("timestamp", String.valueOf(l))
+                    .header("sign", serverSign)
+                    .body("{\"keyword\": \"是史昂傻逼臭傻逼打傻逼贱女煞笔东西\"}", "application/json")
+                    .execute()
+                    .body();
+            System.out.println(body);
+        }
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.stellarisapi.project.service.impl.inner;
+package com.stellarisapi.project.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.stellarisapi.project.model.entity.Wmsensitive;

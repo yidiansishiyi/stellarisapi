@@ -13,6 +13,7 @@ import com.stellarisapi.project.service.UserInterfaceInfoService;
 import com.stellarisapi.project.utils.MailUtils;
 import com.stellarisapi.project.utils.SensitiveWordUtil;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.PostMapping;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -30,6 +31,9 @@ public class EarlyWarningServiceImpl extends ServiceImpl<EarlyWarningMapper, Ear
 
     @PostConstruct
     void initialize() {
+
+            System.out.println("加載測試5");
+
         String warring = ResourceUtil.readUtf8Str("warring.html");
         this.setStrHtmlWarning(warring);
     }

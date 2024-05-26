@@ -3,7 +3,9 @@ package com.stellarisapi.manager;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.PostMapping;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
@@ -14,8 +16,14 @@ public class RedisManager {
     @Resource
     private RedissonClient redissonClient;
 
+    @PostConstruct
+    void init() {
+        System.out.println("加載測試3");
+    }
+
     /**
-     * 随机数唯一保证,保证每一个随机数每一个用户五分钟内使用一次
+     * 随机数唯一保证,保证每一个随机数每一个用户五分
+     * 钟内使用一次
      * 使用随机数做 key 用户身份码做值,多随机数相同时使用 ,分割
      * 限制随机数大小上限,防止多用户统一随机数,影响数据库正常
      * @param randomNumber 随机数

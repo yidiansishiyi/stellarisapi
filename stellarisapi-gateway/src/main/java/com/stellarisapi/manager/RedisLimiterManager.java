@@ -1,12 +1,11 @@
-package com.stellaris.manager;
+package com.stellarisapi.manager;
 
 import cn.hutool.core.text.CharSequenceUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 
 import com.stellaris.stellarisapicommon.common.ErrorCode;
 import com.stellaris.stellarisapicommon.exception.BusinessException;
 import com.stellaris.stellarisapicommon.model.entity.RateLimiterAllocation;
-import com.stellaris.stellarisapicommon.service.RateLimiterAllocationService;
+import com.stellaris.stellarisapicommon.service.InnerRateLimiterAllocationService;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,9 +13,10 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.apache.dubbo.config.annotation.DubboService;
 import org.redisson.api.*;
+import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.Serializable;
 
@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  * 专门提供 RedisLimiter 限流基础服务的（提供了通用的能力）
  */
 //@Service
-@DubboService
+@Component
 @Slf4j
 public class RedisLimiterManager {
 
@@ -35,10 +35,16 @@ public class RedisLimiterManager {
     private RedissonClient redissonClient;
 
     @DubboReference
-    private RateLimiterAllocationService rateLimiterAllocationService;
+    private InnerRateLimiterAllocationService rateLimiterAllocationService;
 
 
     private Map<String, Map<Integer, Map<String, RateLimiterAllocation>>> rateLimiterAllocationsMap;
+
+    @PostConstruct
+    void init() {
+        System.out.println("加載測試2");
+        rateLimiterAllocationsMap = rateLimiterAllocationService.rateLimiterAllocationsMap();
+    }
 
 
     /**
@@ -50,7 +56,7 @@ public class RedisLimiterManager {
         Integer scene = rateLimiterKeyInfo.getScene();
         String key = getRateLimiterKey(rateLimiterKeyInfo);
 
-        Map<String, RateLimiterAllocation> initOriginal = rateLimiterAllocationsMap.get("正常").get(scene);
+        Map<String, RateLimiterAllocation> initOriginal = rateLimiterAllocationsMap.get("1").get(scene);
 
         RRateLimiter rateLimiter = null;
         if (initOriginal.containsKey(rateLimiterKeyInfo.getUrl())) {
@@ -64,32 +70,6 @@ public class RedisLimiterManager {
                 rateLimiter.expire(72, TimeUnit.HOURS);
             }
         }
-//        RRateLimiter rateLimiter = (RRateLimiter) cacheManager.get(key);
-//        // 如果不包含该限流器,去配置表内拉去限流器
-//        if (!cacheManager.containsKey(key)) {
-//            synchronized (RedisLimiterManager.class) {
-//                if (!cacheManager.containsKey(key)) {
-//                    // 如果已有限流器不存在,根据注解创新的限流器加入到类中
-//                    rateLimiter = redissonClient.getRateLimiter(key);
-//                    rateLimiter.delete();
-//                    // 设置限流器超时时间,清理 redis 内数据该方法不推荐使用,RExpirable
-//                    rateLimiter.expire(72, TimeUnit.HOURS);
-//                    String url = rateLimiterKeyInfo.getUrl();
-//                    // 初始使用正常状态的限流参数限流器
-//                    // 当提供方接口数据异常之后提取对应状态参数创建限流器更新 cacheManager
-//                    Map<String, RateLimiterAllocation> initOriginal = rateLimiterAllocationsMap.get("正常").get(scene);
-//                    if (initOriginal.containsKey(url)) {
-//                        RateLimiterAllocation rateLimiterAllocation = initOriginal.get(url);
-//                        rateLimiter.trySetRate(RateType.OVERALL, rateLimiterAllocation.getRate(),
-//                                rateLimiterAllocation.getRateInterval(),
-//                                getRateTimeUnit(rateLimiterAllocation.getRateIntervalUnit()));
-//                        cacheManager.put(key, rateLimiter);
-//                    } else {
-//                        rateLimiter = null;
-//                    }
-//                }
-//            }
-//        }
         if (rateLimiter == null) {
             return;
         }

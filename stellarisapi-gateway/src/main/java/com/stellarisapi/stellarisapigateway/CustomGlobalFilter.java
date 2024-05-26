@@ -157,16 +157,16 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         if (Long.parseLong(nonce) > 10000L) {
             return handleNoAuth(response);
         }
-//        // 时间和当前时间不能超过 5 分钟
-//        Long currentTime = System.currentTimeMillis() / 1000;
-//        final Long FIVE_MINUTES = 60 * 5L;
-//        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
-//            return handleNoAuth(response);
-//        }
-//        // 确保一个来源的随机数五分钟内唯一(长度暂定为一个mysql text 的长度)
-//        if (!redisManager.storeRandomNumber(sourceAddress, nonce, 65535)) {
-//            return handleNoAuth(response);
-//        }
+        // 时间和当前时间不能超过 5 分钟
+        Long currentTime = System.currentTimeMillis() / 1000;
+        final Long FIVE_MINUTES = 60 * 5L;
+        if ((currentTime - Long.parseLong(timestamp)) >= FIVE_MINUTES) {
+            return handleNoAuth(response);
+        }
+        // 确保一个来源的随机数五分钟内唯一(长度暂定为一个mysql text 的长度)
+        if (!redisManager.storeRandomNumber(sourceAddress, nonce, 65535)) {
+            return handleNoAuth(response);
+        }
         // 实际情况中是从数据库中查出 secretKey
         String secretKey = invokeUser.getSecretKey();
         String serverSign = SingManager.genSign(nonce, timestamp, bodyString, accessKey, secretKey);
@@ -204,13 +204,6 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
         // 在此处转换请求路径,更改请求参数 requestAdapterDTO 内的 haaders 为 map<string,string> 请纠正写法
         // 4. 构建新的请求路径和请求参数
         HttpHeaders newHeaders = new HttpHeaders();
-
-        // 创建一个 headerssMap<String, String>
-//        String result = HttpRequest.post(originalUrl)
-//                .addHeaders(requestAdapterDTO.getHeaders())
-//                .body(bodyString)
-//                .execute()
-//                .body();
 
 //        System.out.println(result);
         // 将 Map<String, String> 放入 HttpHeaders 对象中

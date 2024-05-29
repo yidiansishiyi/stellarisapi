@@ -306,20 +306,21 @@ public class CustomGlobalFilter implements GlobalFilter, Ordered {
 
     public static void main(String[] args) {
 //        String bodyString = "{\"app_id\":\"aXWyoVK7zPL9FY4RozUKML\",\"request_id\":\"365bb732c4be32694a726e250d5b1e83\",\"uid\":\"365bb732c4be32694a726e250d5b1e75\",\"content\":\"太阳多大\"}";
-        String bodyString = "{\"keyword\": \"是史昂傻逼臭傻逼打傻逼贱女煞笔东西\"}";
-        Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
 
-        // 打印转换后的 Map 对象
-        System.out.println(map);
+        for (int i = 0; i < 10; i++) {
+            String bodyString = "{\"keyword\": \"是史昂傻逼臭傻逼打傻逼贱女煞笔东西\"}";
+            Map<String, Object> map = JSONUtil.parseObj(bodyString).toBean(Map.class);
 
-        Long l = System.currentTimeMillis();
-        Integer randomNumber2 = RandomUtil.randomInt(100);
-        System.out.println(randomNumber2);
-        System.out.println(l);
-        String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
-        System.out.println(serverSign);
+            // 打印转换后的 Map 对象
+            System.out.println(map);
 
-        for (int i = 0; i < 100; i++) {
+            Long l = System.currentTimeMillis();
+            Integer randomNumber2 = RandomUtil.randomInt(100);
+            System.out.println(randomNumber2);
+            System.out.println(l);
+            String serverSign = SingManager.genSign(randomNumber2.toString(), l.toString(), bodyString, "fb15d434781e1f9fa984609b5e099014", "119716dcf08daf5ee828a98423198671");
+            System.out.println(serverSign);
+
             String body = HttpRequest.post("http://localhost:8090/api/wmsensitiveInfo/check")
                     .header("accessKey", "fb15d434781e1f9fa984609b5e099014")
                     .header("nonce", randomNumber2.toString())

@@ -1,5 +1,7 @@
 package com.stellarisapi.project.controller;
 
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import com.stellarisapi.project.model.dto.rateLimiterAllocation.RateLimiterAllocationQueryRequest;
@@ -62,13 +64,14 @@ public class RateLimiterAllocationController {
         rateLimiterAllocation.setCreateUserName(loginUser.getUserName());
         // 缓存和实体都同步
         Integer usageStatus = rateLimiterAllocationAddRequest.getUsageStatus();
-        if (usageStatus != 1) {
-
-//            ThrowUtils.throwIf(!redisLimiterManager.put(rateLimiterAllocation), ErrorCode.SYSTEM_ERROR);
-        }
+//        if (usageStatus != 1) {
+//
+////            ThrowUtils.throwIf(!redisLimiterManager.put(rateLimiterAllocation), ErrorCode.SYSTEM_ERROR);
+//        }
         boolean result = rateLimiterAllocationService.save(rateLimiterAllocation);
         ThrowUtils.throwIf(!result, ErrorCode.OPERATION_ERROR);
         long newRateLimiterAllocationId = rateLimiterAllocation.getId();
+        updateGatewayRateLimiter();
         return ResultUtils.success(newRateLimiterAllocationId);
     }
 
@@ -95,6 +98,7 @@ public class RateLimiterAllocationController {
         }
 //        ThrowUtils.throwIf(!redisLimiterManager.removed(oldRateLimiterAllocation), ErrorCode.SYSTEM_ERROR);
         boolean b = rateLimiterAllocationService.removeById(id);
+        updateGatewayRateLimiter();
         return ResultUtils.success(b);
     }
 
@@ -127,6 +131,7 @@ public class RateLimiterAllocationController {
         }
         ThrowUtils.throwIf(!update, ErrorCode.NOT_FOUND_ERROR);
         boolean result = rateLimiterAllocationService.updateById(rateLimiterAllocation);
+        updateGatewayRateLimiter();
         return ResultUtils.success(result);
     }
 
@@ -165,6 +170,10 @@ public class RateLimiterAllocationController {
         Page<RateLimiterAllocation> rateLimiterAllocationPage = rateLimiterAllocationService.page(new Page<>(current, size),
                 rateLimiterAllocationService.getQueryWrapper(rateLimiterAllocationQueryRequest));
         return ResultUtils.success(rateLimiterAllocationPage);
+    }
+
+    private void updateGatewayRateLimiter() {
+        HttpResponse execute = HttpRequest.get("http://localhost:8090/actuator/reload").execute();
     }
 
 //    /**

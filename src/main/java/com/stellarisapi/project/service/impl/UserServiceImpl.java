@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static cn.hutool.crypto.digest.DigestUtil.*;
 import static com.stellarisapi.project.constant.UserConstant.ADMIN_ROLE;
@@ -179,7 +180,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         String userRole = loginUser.getUserRole();
         UserRoleEnum enumByValue = UserRoleEnum.getEnumByValue(userRole);
 
-        if (loginUserId.equals(deleteRequest.getId()) && !UserRoleEnum.ADMIN.equals(enumByValue)) {
+        if (!Objects.equals(loginUserId, deleteRequest.getId()) && !UserRoleEnum.ADMIN.equals(enumByValue)) {
             throw new BusinessException(ErrorCode.NO_AUTH_ERROR);
         }
 

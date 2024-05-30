@@ -15,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.redisson.api.*;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -27,7 +31,9 @@ import java.util.concurrent.TimeUnit;
  * 专门提供 RedisLimiter 限流基础服务的（提供了通用的能力）
  */
 //@Service
-@Component
+@RestController
+@RequestMapping("/actuator")
+//@Component
 @Slf4j
 public class RedisLimiterManager {
 
@@ -41,6 +47,7 @@ public class RedisLimiterManager {
     private Map<String, Map<Integer, Map<String, RateLimiterAllocation>>> rateLimiterAllocationsMap;
 
     @PostConstruct
+    @GetMapping("/reload")
     void init() {
         System.out.println("加載測試2");
         rateLimiterAllocationsMap = rateLimiterAllocationService.rateLimiterAllocationsMap();

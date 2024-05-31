@@ -49,8 +49,9 @@ public class RedisLimiterManager {
     @PostConstruct
     @GetMapping("/reload")
     void init() {
-        System.out.println("加載測試2");
-        rateLimiterAllocationsMap = rateLimiterAllocationService.rateLimiterAllocationsMap();
+        new Thread(() -> {
+            rateLimiterAllocationsMap = rateLimiterAllocationService.rateLimiterAllocationsMap();
+        }).start();
     }
 
 

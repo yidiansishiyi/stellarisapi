@@ -180,10 +180,10 @@ public class UserController {
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
         String userPassword = userUpdateRequest.getUserPassword();
-        if (userPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR);
-        }
         if (StrUtil.isNotBlank(userPassword)) {
+            if (userPassword.length() < 8) {
+                throw new BusinessException(ErrorCode.PARAMS_ERROR);
+            }
             String encryptPassword = DigestUtils.md5DigestAsHex(("yidiansishiyi" + userUpdateRequest.getUserPassword()).getBytes());
             user.setUserPassword(encryptPassword);
         }

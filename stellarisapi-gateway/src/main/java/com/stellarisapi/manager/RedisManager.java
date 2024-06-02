@@ -16,11 +16,6 @@ public class RedisManager {
     @Resource
     private RedissonClient redissonClient;
 
-    @PostConstruct
-    void init() {
-        System.out.println("加載測試3");
-    }
-
     /**
      * 随机数唯一保证,保证每一个随机数每一个用户五分
      * 钟内使用一次
